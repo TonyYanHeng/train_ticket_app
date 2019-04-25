@@ -11,7 +11,6 @@ import shutil
 from PIL import Image
 
 train_ticket_url = "https://www.12306.cn/index/"
-baidu_shitu_url = "http://image.baidu.com/?fr=shitu"
 sub_img_location = {
     '0_0.png': '35,35',
     '0_1.png': '105,35',
@@ -93,20 +92,6 @@ def get_target_word_from_original_image(original_img):
         str_content = str(content, encoding='utf8')
         pattern = re.compile(r"请点击下图中所有的(.*?)\"")
         target_words = pattern.findall(str_content)
-        """
-        if "请点击下图中所有的" in str_content:
-            str_list1 = re.split(r'请点击下图中所有的', str_content)
-            if len(str_list1) > 1:
-                new_str1 = str_list1[1]  # new_str1为str_content中'请点击下图中所有的'之后的内容
-                str_list2 = new_str1.split(r'"')
-                new_str2 = str_list2[0]  # new_str2为new_str1中'"'之前的内容
-                if "和" in new_str2:
-                    str_list3 = new_str2.split(r'和')
-                    for cur_str in str_list3:
-                        target_words.append(cur_str)
-                else:
-                    target_words.append(new_str2)
-    """
     return target_words
 
 
