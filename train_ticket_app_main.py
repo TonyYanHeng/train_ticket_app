@@ -143,6 +143,7 @@ class LoginIns(object):
         return sub_images_path
 
     def find_locations(self, img_path):
+        locations = []
         # step1: 清空images目录下的所有文件
         delete_old_images(os.path.dirname(img_path))
         # step2: 下载验证码图片
@@ -151,13 +152,12 @@ class LoginIns(object):
         target_words = get_baidu_ocr_result(img_path)
         if len(target_words) == 0 or target_words == [""]:
             print("百度OCR未能识别出当前图像中的文字！")
-            self.find_locations(img_path)
+            locations = self.find_locations(img_path)
         else:
             print("当前图像中的目标文字为：%s" % target_words)
         # step4: 切割验证码图片为8个小图片
         sub_img_paths = self.generate_8_sub_images(img_path)
         # step5：利用百度识图逐个识别子图并得到满足条件的子图位置
-        locations = []
         for cur_sub_image_path in sub_img_paths:
             cur_shitu_result = get_baidu_shitu_result(cur_sub_image_path)
             cur_sub_image = os.path.basename(cur_sub_image_path)
@@ -168,9 +168,10 @@ class LoginIns(object):
                 if target_word in cur_shitu_result:
                     locations.append(sub_img_location[cur_sub_image])
         if len(locations) == 0:
-            self.find_locations(img_path)
+            print("百度图像识别没有找到目标子图！")
+            locations = self.find_locations(img_path)
         else:
-            print("Current sub image locations are %s" % locations)
+            print("百度图像识别找到的目标子图位置为：%s。" % locations)
         return list(set(locations))
 
     def close_session(self):
