@@ -3,15 +3,19 @@
 
 import urllib.request
 import re
-import base64, time, os
+import base64
+import time
+import os
 import shutil
 from PIL import Image
 import requests
 import json
+import jieba
+from xml.etree import ElementTree
 
-
-train_ticket_url = "https://www.12306.cn/index/"
 get_img64_url = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand"
+login_url = "https://kyfw.12306.cn/passport/web/login"
+home_url = "https://kyfw.12306.cn/otn/login/userLogin"
 sub_img_location = {
     '0_0.png': '35,35',
     '0_1.png': '105,35',
@@ -93,10 +97,12 @@ class LoginIns(object):
         :param img_path:
         :return:
         """
+        print("get_image start running!")
         url = "https://kyfw.12306.cn/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand"
         response = self.session.get(url=url, headers=self.headers, verify=False)
         with open(img_path, 'wb') as f:
             f.write(response.content)
+        print("get_image end!")
 
     def verify_image(self, locations):
         """
@@ -165,17 +171,58 @@ class LoginIns(object):
             if len(cur_shitu_result) == 0:
                 continue
             for target_word in target_words:
-                if target_word in cur_shitu_result:
-                    locations.append(sub_img_location[cur_sub_image])
+                for cur_result in cur_shitu_result:
+                    if target_word in cur_result or cur_result in target_word:
+                        locations.append(sub_img_location[cur_sub_image])
         if len(locations) == 0:
             print("百度图像识别没有找到目标子图！")
             locations = self.find_locations(img_path)
         else:
+            locations = list(set(locations))
             print("百度图像识别找到的目标子图位置为：%s。" % locations)
-        return list(set(locations))
+        return locations
 
     def close_session(self):
         self.session.close()
+
+    def login_home(self, locations):
+        location_info = ','.join(locations)
+        username = "719492067@qq.com"
+        password = "Hyh20180225"
+        data = {
+            "username": username,
+            "password": password,
+            "appid": "otn",
+            "answer": location_info,
+        }
+        login_headers = self.headers
+        login_headers["Host"] = "kyfw.12306.cn"
+        login_headers["Accept"] = "application/json, text/javascript, */*; q=0.01"
+        login_headers["Accept-Language"] = "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2"
+        login_headers["Accept-Encoding"] = "gzip, deflate, br"
+        login_headers["Referer"] = "https://kyfw.12306.cn/otn/resources/login.html"
+        login_headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+        # login_headers["Content-Length"] = "85"
+        login_headers["Connection"] = "keep-alive"
+        # data = json.dumps(data)
+        response = self.session.post(login_url, data=data, headers=login_headers, verify=False)
+        response.encoding = 'utf-8'
+        # node = ElementTree.XML(response.text)
+        content = str(response.content)
+        if content.startswith(u'\ufeff'):
+            content = content[3:]
+        content = json.loads(content)
+        code = content["result_code"]
+        if code == '0':
+            print("登录成功！")
+            return True
+        else:
+            return False
+
+    def redirect_to_home(self):
+        res = self.session.get(home_url, headers=self.headers, verify=False)
+        content = res.content
+        print("这是首页！")
 
 
 if __name__ == '__main__':
@@ -185,11 +232,18 @@ if __name__ == '__main__':
     original_img_path = os.path.join(images_dir_path, 'original.jpg')
     try:
         loginIns = LoginIns()
-        checkFlag = False
-        while not checkFlag:
+        imgCheckFlag = False
+        loginFlag = False
+        while not loginFlag:
             sub_img_locations = loginIns.find_locations(original_img_path)
-            checkFlag = loginIns.verify_image(sub_img_locations)
-        print("图形验证码验证成功！")
+            imgCheckFlag = loginIns.verify_image(sub_img_locations)
+            if not imgCheckFlag:
+                print("图形验证码验证失败！")
+                continue
+            else:
+                print("图形验证码验证成功！")
+                loginFlag = loginIns.login_home(sub_img_locations)
+        print("登录成功！")
     except Exception as e:
         print("Exception happened, the detail is: %s!" % e)
     finally:
