@@ -133,7 +133,6 @@ class LoginBySelenium(object):
         password_input = self.browser.find_element_by_xpath('//*[@id="J-password"]')
         password_input.clear()
         password_input.send_keys(password)
-        time.sleep(1)
 
     def download_img64(self, img64_path):
         print("开始下载验证码图片！")
@@ -199,6 +198,7 @@ class LoginBySelenium(object):
         self.browser.execute_script(js)
         refresh_button = self.browser.find_element_by_css_selector('.lgcode-refresh')
         refresh_button.click()
+        time.sleep(3)
 
     def close_browser(self):
         self.browser.close()
@@ -219,6 +219,7 @@ if __name__ == '__main__':
             login_ins.click_login_button()
             time.sleep(3)
             cur_url = login_ins.get_current_url()
+            print("当前网页的URL是：%s" % cur_url)
         print("登录成功！")
     except Exception as e:
         print("Exception happened, the detail is: %s!" % e)
