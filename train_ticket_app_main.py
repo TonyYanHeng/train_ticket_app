@@ -18,7 +18,10 @@ get_img64_url = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_si
 login_url = "https://kyfw.12306.cn/passport/web/login"
 home_url = "https://kyfw.12306.cn/otn/login/userLogin"
 username = "719492067@qq.com"
-password = "XXXXX"  # 你自己的登录密码
+password = "Hyh20180225"  # 你自己的登录密码
+from_station = "犀浦"
+to_station = "都江堰"
+date = "2019-05-02"
 sub_img_location = {
     '0_0.png': '35,35',
     '0_1.png': '105,35',
@@ -117,7 +120,7 @@ class LoginBySelenium(object):
 
     def prepare_for_download_img64(self):
         self.browser.get(train_ticket_url)
-        time.sleep(1)
+        time.sleep(2)
         login_a = self.browser.find_element_by_xpath('/html/body/div[2]/div/div[1]/div/div/ul/li[3]/a[1]')
         login_a.click()
         time.sleep(1)
@@ -200,6 +203,25 @@ class LoginBySelenium(object):
         refresh_button.click()
         time.sleep(3)
 
+    def click_home_to_query_ticket(self):
+        home_a = self.browser.find_element_by_css_selector('#J-index > a:nth-child(1)')
+        home_a.click()
+        time.sleep(3)
+        from_station_input = self.browser.find_element_by_xpath('//*[@id="fromStationText"]')
+        from_station_input.clear()
+        from_station_input.send_keys(from_station_input)
+        to_station_input = self.browser.find_element_by_xpath('//*[@id="toStationText"]')
+        to_station_input.clear()
+        to_station_input.send_keys(to_station)
+        date_input = self.browser.find_element_by_xpath('//*[@id="train_date"]')
+        date_input.clear()
+        date_input.send_keys(date)
+        query_button = self.browser.find_element_by_xpath('//*[@id="search_one"]')
+        query_button.click()
+        time.sleep(3)
+        self.browser.switch_to.window()
+        print("1111")
+
     def close_browser(self):
         self.browser.close()
 
@@ -221,6 +243,8 @@ if __name__ == '__main__':
             cur_url = login_ins.get_current_url()
             print("当前网页的URL是：%s" % cur_url)
         print("登录成功！")
+        if login_ins.get_current_url() == "https://kyfw.12306.cn/otn/view/index.html":
+            login_ins.click_home_to_query_ticket()
     except Exception as e:
         print("Exception happened, the detail is: %s!" % e)
     finally:
