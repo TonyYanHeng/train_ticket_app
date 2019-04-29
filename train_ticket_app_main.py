@@ -11,6 +11,9 @@ from PIL import Image
 from selenium.webdriver.firefox import options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.by import By
 import jieba
 
 train_ticket_url = "https://www.12306.cn/index/"
@@ -19,9 +22,9 @@ login_url = "https://kyfw.12306.cn/passport/web/login"
 home_url = "https://kyfw.12306.cn/otn/login/userLogin"
 username = "719492067@qq.com"
 password = "Hyh20180225"  # 你自己的登录密码
-from_station = "犀浦"
-to_station = "都江堰"
-date = "2019-05-02"
+from_station = "上海"
+to_station = "成都"
+train_date = "2019-05-02"
 sub_img_location = {
     '0_0.png': '35,35',
     '0_1.png': '105,35',
@@ -117,17 +120,22 @@ def get_baidu_shitu_result(img_path):
 class LoginBySelenium(object):
     def __init__(self):
         self.browser = webdriver.Firefox()
+        self.login_url = "https://kyfw.12306.cn/otn/resources/login.html"
+        self.home_url = "https://kyfw.12306.cn/otn/view/index.html"
+        self.query_ticket_url = "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc"
 
     def prepare_for_download_img64(self):
         self.browser.get(train_ticket_url)
-        time.sleep(2)
+        time.sleep(1)
         login_a = self.browser.find_element_by_xpath('/html/body/div[2]/div/div[1]/div/div/ul/li[3]/a[1]')
         login_a.click()
         time.sleep(1)
-        account_login_a = self.browser.find_element_by_xpath('/html/body/div[2]/div[2]/ul/li[2]/a')
+        account_login_a_xpath = '/html/body/div[2]/div[2]/ul/li[2]/a'
+        account_login_a = self.browser.find_element_by_xpath(account_login_a_xpath)
         account_login_a.click()
         time.sleep(1)
         self.input_username_and_password()
+        time.sleep(5)
 
     def input_username_and_password(self):
         username_input = self.browser.find_element_by_xpath('//*[@id="J-userName"]')
@@ -147,11 +155,11 @@ class LoginBySelenium(object):
 
     def find_sub_img_location(self, img64_path):
         results = []
-        self.refresh_img64()
         self.download_img64(img64_path)
         target_words = get_baidu_ocr_result(img64_path)
         if len(target_words) == 0 or target_words == [""]:
             print("未能识别出当前验证码图片中的文字！")
+            self.refresh_img64()
             results = self.find_sub_img_location(img64_path)
         else:
             print("当前验证码图片中的目标文字为：%s" % target_words)
@@ -171,6 +179,7 @@ class LoginBySelenium(object):
                                 results.append(sub_img_location[cur_sub_image_name])
             if len(results) == 0:
                 print("没找到对应的目标子图！")
+                self.refresh_img64()
                 results = self.find_sub_img_location(img64_path)
             else:
                 results = list(set(results))
@@ -192,6 +201,7 @@ class LoginBySelenium(object):
     def click_login_button(self):
         login_button = self.browser.find_element_by_xpath('//*[@id="J-login"]')
         login_button.click()
+        time.sleep(20)
 
     def get_current_url(self):
         return self.browser.current_url
@@ -201,26 +211,58 @@ class LoginBySelenium(object):
         self.browser.execute_script(js)
         refresh_button = self.browser.find_element_by_css_selector('.lgcode-refresh')
         refresh_button.click()
-        time.sleep(3)
+        time.sleep(5)
 
-    def click_home_to_query_ticket(self):
-        home_a = self.browser.find_element_by_css_selector('#J-index > a:nth-child(1)')
-        home_a.click()
-        time.sleep(3)
-        from_station_input = self.browser.find_element_by_xpath('//*[@id="fromStationText"]')
+    def query_ticket(self):
+        # 打开查票网页
+        self.browser.get(self.query_ticket_url)
+        from_station_input_xpath = '//*[@id="fromStationText"]'
+        WebDriverWait(self.browser, 1000).until(
+            expected_conditions.visibility_of_element_located((By.XPATH, from_station_input_xpath))
+        )
+        # 输入出发地
+        js = "document.getElementById(\"fromStationText\").className='inp-txt inp_selected';"
+        self.browser.execute_script(js)
+        from_station_input = self.browser.find_element_by_xpath(from_station_input_xpath)
         from_station_input.clear()
-        from_station_input.send_keys(from_station_input)
-        to_station_input = self.browser.find_element_by_xpath('//*[@id="toStationText"]')
+        from_station_input.send_keys(from_station)
+        js = "document.getElementById(\"fromStation\").value='SHH';"
+        self.browser.execute_script(js)
+        # 输入目的地
+        to_station_input_xpath = '//*[@id="toStationText"]'
+        js = "document.getElementById(\"toStationText\").className='inp-txt inp_selected';"
+        self.browser.execute_script(js)
+        to_station_input = self.browser.find_element_by_xpath(to_station_input_xpath)
         to_station_input.clear()
         to_station_input.send_keys(to_station)
-        date_input = self.browser.find_element_by_xpath('//*[@id="train_date"]')
-        date_input.clear()
-        date_input.send_keys(date)
-        query_button = self.browser.find_element_by_xpath('//*[@id="search_one"]')
+        js = "document.getElementById(\"toStation\").value='CDW';"
+        self.browser.execute_script(js)
+        # 输入出发日
+        train_date_xpath = '//*[@id="train_date"]'
+        js = "document.getElementById(\"train_date\").removeAttribute('readonly');"
+        self.browser.execute_script(js)
+        train_date_input = self.browser.find_element_by_xpath(train_date_xpath)
+        train_date_input.clear()
+        train_date_input.send_keys(train_date)
+        query_button = self.browser.find_element_by_xpath('//*[@id="query_ticket"]')
         query_button.click()
-        time.sleep(3)
-        self.browser.switch_to.window()
-        print("1111")
+        time.sleep(2)
+
+    def book_ticket(self):
+        tr_list = self.browser.find_elements_by_xpath('//*[@id="queryLeftTable"]/tr[not(@datatran)]')
+        for tr in tr_list:
+            has_ticket = False
+            left_ticket = tr.find_element_by_xpath('.//td[8]').text
+            if left_ticket == "有" or left_ticket.isdigit():
+                has_ticket = True
+            left_ticket = tr.find_element_by_xpath('.//td[10]').text
+            if left_ticket == "有" or left_ticket.isdigit():
+                has_ticket = True
+            if has_ticket:
+                print("有满足条件的[二等座]、[硬卧]或[硬座]车票！")
+                book_button = tr.find_element_by_xpath('.//td[13]/a')
+                book_button.click()
+                time.sleep(3)
 
     def close_browser(self):
         self.browser.close()
@@ -232,19 +274,20 @@ if __name__ == '__main__':
     images_dir_path = os.path.join(cur_dir_path, 'images')
     original_img_path = os.path.join(images_dir_path, 'original.jpg')
     try:
-        cur_url = "https://kyfw.12306.cn/otn/resources/login.html"
         login_ins = LoginBySelenium()
+        cur_url = login_ins.login_url
         login_ins.prepare_for_download_img64()
-        while cur_url == "https://kyfw.12306.cn/otn/resources/login.html":
+        while cur_url == login_ins.login_url:
             sub_img_locations = login_ins.find_sub_img_location(original_img_path)
             login_ins.add_randcode_in_html(sub_img_locations)
             login_ins.click_login_button()
-            time.sleep(3)
             cur_url = login_ins.get_current_url()
             print("当前网页的URL是：%s" % cur_url)
         print("登录成功！")
-        if login_ins.get_current_url() == "https://kyfw.12306.cn/otn/view/index.html":
-            login_ins.click_home_to_query_ticket()
+        if cur_url == login_ins.home_url:
+            login_ins.query_ticket()
+            login_ins.book_ticket()
+        print("1111")
     except Exception as e:
         print("Exception happened, the detail is: %s!" % e)
     finally:
