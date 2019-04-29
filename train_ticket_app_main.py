@@ -37,6 +37,13 @@ sub_img_location = {
 }
 
 
+def get_original_img_path():
+    cur_file_path = os.path.realpath(__file__)
+    cur_dir_path = os.path.dirname(cur_file_path)
+    images_dir_path = os.path.join(cur_dir_path, 'images')
+    return os.path.join(images_dir_path, 'original.jpg')
+
+
 def delete_old_images(images_path):
     """清空images目录下的内容"""
     if os.path.exists(images_path):
@@ -269,14 +276,11 @@ class LoginBySelenium(object):
 
 
 if __name__ == '__main__':
-    cur_file_path = os.path.realpath(__file__)
-    cur_dir_path = os.path.dirname(cur_file_path)
-    images_dir_path = os.path.join(cur_dir_path, 'images')
-    original_img_path = os.path.join(images_dir_path, 'original.jpg')
     try:
         login_ins = LoginBySelenium()
-        cur_url = login_ins.login_url
         login_ins.prepare_for_download_img64()
+        original_img_path = get_original_img_path()
+        cur_url = login_ins.login_url
         while cur_url == login_ins.login_url:
             sub_img_locations = login_ins.find_sub_img_location(original_img_path)
             login_ins.add_randcode_in_html(sub_img_locations)
