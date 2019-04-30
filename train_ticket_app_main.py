@@ -15,16 +15,10 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 import jieba
+import configparser
 
-train_ticket_url = "https://www.12306.cn/index/"
-get_img64_url = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand"
-login_url = "https://kyfw.12306.cn/passport/web/login"
-home_url = "https://kyfw.12306.cn/otn/login/userLogin"
-username = "719492067@qq.com"
-password = "Hyh20180225"  # 你自己的登录密码
-from_station = "上海"
-to_station = "成都"
-train_date = "2019-05-02"
+cur_file_path = os.path.realpath(__file__)
+cur_dir_path = os.path.dirname(cur_file_path)
 sub_img_location = {
     '0_0.png': '35,35',
     '0_1.png': '105,35',
@@ -37,9 +31,24 @@ sub_img_location = {
 }
 
 
+def get_cfg_info_from_ini_file():
+    ret = {}
+    ini_file_path = os.path.join(cur_dir_path, 'conf.ini')
+    conf = configparser.ConfigParser()
+    with open(ini_file_path, 'r') as f:
+        conf.read_file(f)
+        ret["username"] = conf.get('cfg', 'username')
+        ret["password"] = conf.get('cfg', 'password')
+        ret["from_station"] = conf.get('cfg', 'from_station')
+        ret["to_station"] = conf.get('cfg', 'to_station')
+        ret["train_date"] = conf.get('cfg', 'train_date')
+        ret["passenger_name"] = conf.get('cfg', 'passenger_name')
+        ret["passenger_id_no"] = conf.get('cfg', 'passenger_id_no')
+        ret["phone_no"] = conf.get('cfg', 'phone_no')
+    return ret
+
+
 def get_original_img_path():
-    cur_file_path = os.path.realpath(__file__)
-    cur_dir_path = os.path.dirname(cur_file_path)
     images_dir_path = os.path.join(cur_dir_path, 'images')
     return os.path.join(images_dir_path, 'original.jpg')
 
@@ -100,6 +109,135 @@ def get_baidu_ocr_result(img_path):
     return target_words
 
 
+def optimize_baitu_shitu_result(ret_list):
+    for cur_ret in ret_list:
+        cur_index = ret_list.index(cur_ret)
+        if "转速表" in cur_ret:
+            ret_list[cur_index] = "仪表盘"
+        if "耳机" in cur_ret:
+            ret_list[cur_index] = "耳塞"
+        if "拌菜" in cur_ret:
+            ret_list[cur_index] = "沙拉"
+        if "青豆" in cur_ret:
+            ret_list[cur_index] = "绿豆"
+        if "球拍" in cur_ret:
+            ret_list[cur_index] = "网球拍"
+        if cur_ret == "无线电留声机" or cur_ret == "蘑菇拍拍灯":
+            ret_list[cur_index] = "锣"
+        if cur_ret == "NBA" or (cur_ret == "体育用品" and "草丛" in ret_list) or \
+                (cur_ret == "单面花束" and "蛋糕" in ret_list) or cur_ret == "绳球":
+            ret_list[cur_index] = "篮球"
+        if (cur_ret == "容器" and "瓷器" in ret_list) or (cur_ret == "垫圈" and "瓶子" in ret_list):
+            ret_list[cur_index] = "茶盅"
+        if cur_ret == "笋丝":
+            ret_list[cur_index] = "薯条"
+        if cur_ret == "软叶刺葵":
+            ret_list[cur_index] = "珊瑚"
+        if cur_ret == "油画" or (cur_ret == "图画" and "卡通动漫人物" in ret_list):
+            ret_list[cur_index] = "调色板"
+        if cur_ret == "艾灸盒":
+            ret_list[cur_index] = "文具盒"
+        if cur_ret == "行政区划图" or "项链" in cur_ret or cur_ret == "金莺鸟":
+            ret_list[cur_index] = "铃铛"
+        if cur_ret == "手提袋":
+            ret_list[cur_index] = "档案袋"
+        if cur_ret == "绝缘子" or cur_ret == "口味蛇" or cur_ret == "万向联轴器" or \
+                (cur_ret == "餐巾纸" and "镂空剪纸" in ret_list):
+            ret_list[cur_index] = "鞭炮"
+        if cur_ret == "红小豆":
+            ret_list[cur_index] = "红豆"
+        if cur_ret == "锅具" or cur_ret == "阿迪锅" or cur_ret == "漏锅" or \
+                cur_ret == "球形摄像机":
+            ret_list[cur_index] = "电饭煲"
+        if cur_ret == "手套" or cur_ret == "手" or \
+                ("绘画" in ret_list and "非主流空间素材" in ret_list) or \
+                (cur_ret == "地图" and "图表" in ret_list):
+            ret_list[cur_index] = "手掌印"
+        if cur_ret == "玉玺" or cur_ret == "瓶塞":
+            ret_list[cur_index] = "印章"
+        if cur_ret == "杨梅干" or cur_ret == "牛肉粒":
+            ret_list[cur_index] = "话梅"
+        if cur_ret == "灰鲸" or "舰" in cur_ret or (cur_ret == "山峦" and "城楼" in ret_list):
+            ret_list[cur_index] = "航母"
+        if cur_ret == "车门限位器" or cur_ret == "哨子":
+            ret_list[cur_index] = "口哨"
+        if "蜥" in cur_ret or cur_ret == "变色龙" or cur_ret == "鹰嘴龟" or cur_ret == "金丝蝾螈":
+            ret_list[cur_index] = "蜥蜴"
+        if "台历" in cur_ret:
+            ret_list[cur_index] = "日历"
+        if "鸥" in cur_ret or cur_ret == "白腿小隼":
+            ret_list[cur_index] = "海鸥"
+        if "酱" in cur_ret:
+            ret_list[cur_index] = "辣椒酱"
+        if cur_ret == "洗耳球":
+            ret_list[cur_index] = "漏斗"
+        if cur_ret == "孔明灯" or cur_ret == "玻璃烛台" or cur_ret == "熔浆" or \
+                cur_ret == "电视背景墙":
+            ret_list[cur_index] = "蜡烛"
+        if cur_ret == "葡萄酒":
+            ret_list[cur_index] = "红酒"
+        if cur_ret == "轮毂" or "风机" in cur_ret or "风扇" in cur_ret:
+            ret_list[cur_index] = "排风机"
+        if cur_ret == "记事本" or cur_ret == "笔记本" or cur_ret == "百洁布" or \
+           cur_ret == "包装袋/盒" or cur_ret == "文件夹" or cur_ret == "便签纸" or \
+           cur_ret == "辉铜矿" or cur_ret == "麂皮织物":
+            ret_list[cur_index] = "本子"
+        if cur_ret == "铁粉" or cur_ret == "钛铁矿" or (cur_ret == "板材" and "章鱼丸机" not in ret_list):
+            ret_list[cur_index] = "海苔"
+        if cur_ret == "章鱼丸机" or cur_ret == "电视柜" or cur_ret == "矩形大键琴":
+            ret_list[cur_index] = "茶几"
+        if cur_ret == "条码纸" or cur_ret == "首饰/饰品" or "胶" in cur_ret or \
+                cur_ret == "商品标签" or cur_ret == "浴霸":
+            ret_list[cur_index] = "双面胶"
+        if cur_ret == "无缝方矩管" or cur_ret == "显示屏":
+            ret_list[cur_index] = "黑板"
+        if cur_ret == "吊袋" or cur_ret == "灭火器" or cur_ret == "电喷泵" or cur_ret == "U盘":
+            ret_list[cur_index] = "沙包"
+        if cur_ret == "吊灯" or cur_ret == "前桅":
+            ret_list[cur_index] = "风铃"
+        if cur_ret == "面包篮" or cur_ret == "规整填料" or cur_ret == "草篓":
+            ret_list[cur_index] = "蒸笼"
+        if cur_ret == "体重秤" or "秤" in cur_ret:
+            ret_list[cur_index] = "电子秤"
+        if cur_ret == "历史遗迹" or (cur_ret == "山峦" and "城楼" not in ret_list):
+            ret_list[cur_index] = "金字塔"
+        if cur_ret == "锥柄立铣刀":
+            ret_list[cur_index] = "冰箱"
+        if cur_ret == "棉花球" or cur_ret == "身体乳" or "药" in cur_ret or \
+                cur_ret == "奶油蘑菇汤" or (cur_ret == "糖果" and "电子原器件" in ret_list):
+            ret_list[cur_index] = "药片"
+        if cur_ret == "靴子":
+            ret_list[cur_index] = "雨靴"
+        if cur_ret == "线缆" or cur_ret == "钢编管" or cur_ret == "护套线":
+            ret_list[cur_index] = "电线"
+        if cur_ret == "阿迪达斯" or cur_ret == "吹风机" or cur_ret == "活塞杆" or \
+                cur_ret == "蓝牙适配器":
+            ret_list[cur_index] = "护腕"
+        if cur_ret == "毛绒玩具" or cur_ret == "针线" or cur_ret == "洗衣球" or cur_ret== "文胸":
+            ret_list[cur_index] = "毛线"
+        if  "勺" in ret_list:
+            ret_list[cur_index] = "锅铲"
+        if cur_ret == "拍子" or cur_ret == "杯刷":
+            ret_list[cur_index] = "苍蝇拍"
+        if cur_ret == "扇子" or "绣" in cur_ret:
+            ret_list[cur_index] = "刺绣"
+        if "碟" in cur_ret or "碗" in cur_ret or "盘" in cur_ret or \
+                (cur_ret == "厨具/餐具" and "烟灰缸" in ret_list):
+            ret_list[cur_index] = "盘子"
+        if cur_ret == "牌楼":
+            ret_list[cur_index] = "牌坊"
+        if cur_ret == "九脚网眼" or ("卡" in cur_ret and "卡通" not in cur_ret):
+            ret_list[cur_index] = "公交卡"
+        if "蜂" in cur_ret:
+            ret_list[cur_index] = "蜜蜂"
+        if ("钟" in cur_ret and cur_ret != "钟角蛙") or cur_ret == "表带" or cur_ret == "含生草":
+            ret_list[cur_index] = "钟表"
+        if "旗" in cur_ret:
+            ret_list[cur_index] = "锦旗"
+    print("优化后的识图结果为：%s" % ret_list)
+    return ret_list
+
+
 def get_baidu_shitu_result(img_path):
     """
     利用百度图像识别来识别图像内容
@@ -121,36 +259,53 @@ def get_baidu_shitu_result(img_path):
         str_content = str(content, encoding='utf8')
         pattern = re.compile(r"keyword\": \"(.*?)\"}")
         ret = pattern.findall(str_content)
+    print("优化前的识图结果为：%s" % ret)
+    ret = optimize_baitu_shitu_result(ret)
     return ret
 
 
 class LoginBySelenium(object):
     def __init__(self):
         self.browser = webdriver.Firefox()
+        self.index_url = "https://www.12306.cn/index/"
         self.login_url = "https://kyfw.12306.cn/otn/resources/login.html"
         self.home_url = "https://kyfw.12306.cn/otn/view/index.html"
         self.query_ticket_url = "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc"
+        self.cfg_info = get_cfg_info_from_ini_file()
 
     def prepare_for_download_img64(self):
-        self.browser.get(train_ticket_url)
-        time.sleep(1)
-        login_a = self.browser.find_element_by_xpath('/html/body/div[2]/div/div[1]/div/div/ul/li[3]/a[1]')
+        self.browser.get(self.index_url)
+        time.sleep(2)
+        # 等待index页面加载完成后再点击“登录”
+        login_a_xpath = '/html/body/div[2]/div/div[1]/div/div/ul/li[3]/a[1]'
+        # WebDriverWait(self.browser, 100).until(
+        #     expected_conditions.text_to_be_present_in_element((By.XPATH, login_a_xpath), '登录')
+        # )
+        login_a = self.browser.find_element_by_xpath(login_a_xpath)
         login_a.click()
-        time.sleep(1)
+        time.sleep(2)
+        # 等待默认的login页面加载完成后再点击“账号登录”
+        # WebDriverWait(self.browser, 100).until(
+        #     expected_conditions.visibility_of_element_located((By.XPATH, '//*[@id="J-login-code-loading"]'))
+        # )
         account_login_a_xpath = '/html/body/div[2]/div[2]/ul/li[2]/a'
         account_login_a = self.browser.find_element_by_xpath(account_login_a_xpath)
         account_login_a.click()
-        time.sleep(1)
+        time.sleep(3)
+        shaoma_login_css_selector = '.login-code'
+        WebDriverWait(self.browser, 100).until(
+            expected_conditions.invisibility_of_element_located((By.CSS_SELECTOR, shaoma_login_css_selector))
+        )
         self.input_username_and_password()
-        time.sleep(5)
+        # time.sleep(5)
 
     def input_username_and_password(self):
         username_input = self.browser.find_element_by_xpath('//*[@id="J-userName"]')
         username_input.clear()
-        username_input.send_keys(username)
+        username_input.send_keys(self.cfg_info.get('username', ''))
         password_input = self.browser.find_element_by_xpath('//*[@id="J-password"]')
         password_input.clear()
-        password_input.send_keys(password)
+        password_input.send_keys(self.cfg_info.get('password', ''))
 
     def download_img64(self, img64_path):
         print("开始下载验证码图片！")
@@ -208,7 +363,7 @@ class LoginBySelenium(object):
     def click_login_button(self):
         login_button = self.browser.find_element_by_xpath('//*[@id="J-login"]')
         login_button.click()
-        time.sleep(20)
+        time.sleep(15)
 
     def get_current_url(self):
         return self.browser.current_url
@@ -232,8 +387,8 @@ class LoginBySelenium(object):
         self.browser.execute_script(js)
         from_station_input = self.browser.find_element_by_xpath(from_station_input_xpath)
         from_station_input.clear()
-        from_station_input.send_keys(from_station)
-        js = "document.getElementById(\"fromStation\").value='SHH';"
+        from_station_input.send_keys(self.cfg_info.get('from_station', ''))
+        js = "document.getElementById(\"fromStation\").value='CDW';"
         self.browser.execute_script(js)
         # 输入目的地
         to_station_input_xpath = '//*[@id="toStationText"]'
@@ -241,8 +396,8 @@ class LoginBySelenium(object):
         self.browser.execute_script(js)
         to_station_input = self.browser.find_element_by_xpath(to_station_input_xpath)
         to_station_input.clear()
-        to_station_input.send_keys(to_station)
-        js = "document.getElementById(\"toStation\").value='CDW';"
+        to_station_input.send_keys(self.cfg_info.get('to_station', ''))
+        js = "document.getElementById(\"toStation\").value='MYW';"
         self.browser.execute_script(js)
         # 输入出发日
         train_date_xpath = '//*[@id="train_date"]'
@@ -250,7 +405,7 @@ class LoginBySelenium(object):
         self.browser.execute_script(js)
         train_date_input = self.browser.find_element_by_xpath(train_date_xpath)
         train_date_input.clear()
-        train_date_input.send_keys(train_date)
+        train_date_input.send_keys(self.cfg_info.get('train_date', ''))
         query_button = self.browser.find_element_by_xpath('//*[@id="query_ticket"]')
         query_button.click()
         time.sleep(2)
@@ -259,17 +414,33 @@ class LoginBySelenium(object):
         tr_list = self.browser.find_elements_by_xpath('//*[@id="queryLeftTable"]/tr[not(@datatran)]')
         for tr in tr_list:
             has_ticket = False
-            left_ticket = tr.find_element_by_xpath('.//td[8]').text
-            if left_ticket == "有" or left_ticket.isdigit():
-                has_ticket = True
+            # left_ticket = tr.find_element_by_xpath('.//td[8]').text
+            # if left_ticket == "有" or left_ticket.isdigit():
+            #     has_ticket = True
             left_ticket = tr.find_element_by_xpath('.//td[10]').text
             if left_ticket == "有" or left_ticket.isdigit():
                 has_ticket = True
             if has_ticket:
-                print("有满足条件的[二等座]、[硬卧]或[硬座]车票！")
+                print("有满足条件的[硬座]车票！")
                 book_button = tr.find_element_by_xpath('.//td[13]/a')
                 book_button.click()
-                time.sleep(3)
+                time.sleep(10)
+                js = "document.getElementById(\"passenger_name_1\").removeAttribute('readonly');"
+                self.browser.execute_script(js)
+                passenger_name_input = self.browser.find_element_by_xpath('//*[@id="passenger_name_1"]')
+                passenger_name_input.clear()
+                passenger_name_input.send_keys(self.cfg_info.get('passenger_name', ''))
+                js = "document.getElementById(\"passenger_id_no_1\").removeAttribute('readonly');"
+                self.browser.execute_script(js)
+                passenger_id_no_input = self.browser.find_element_by_xpath('//*[@id="passenger_id_no_1"]')
+                passenger_id_no_input.clear()
+                passenger_id_no_input.send_keys(self.cfg_info.get('passenger_id_no', ''))
+                js = "document.getElementById(\"phone_no_1\").removeAttribute('readonly');"
+                self.browser.execute_script(js)
+                phone_no_input = self.browser.find_element_by_xpath('//*[@id="phone_no_1"]')
+                phone_no_input.clear()
+                phone_no_input.send_keys(self.cfg_info.get('phone_no', ''))
+                print("111111111111")
 
     def close_browser(self):
         self.browser.close()
