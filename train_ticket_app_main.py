@@ -112,7 +112,9 @@ def get_baidu_ocr_result(img_path):
 def optimize_baitu_shitu_result(ret_list):
     for cur_ret in ret_list:
         cur_index = ret_list.index(cur_ret)
-        if "转速表" in cur_ret:
+        if cur_ret == "书房灯":
+            ret_list[cur_index] = "路灯"
+        if "转速表" in cur_ret or "仪表" in cur_ret or "速度表" in cur_ret:
             ret_list[cur_index] = "仪表盘"
         if "耳机" in cur_ret:
             ret_list[cur_index] = "耳塞"
@@ -151,7 +153,7 @@ def optimize_baitu_shitu_result(ret_list):
             ret_list[cur_index] = "电饭煲"
         if cur_ret == "手套" or cur_ret == "手" or \
                 ("绘画" in ret_list and "非主流空间素材" in ret_list) or \
-                (cur_ret == "地图" and "图表" in ret_list):
+                (cur_ret == "地图" and ("图表" in ret_list or "简笔画" in ret_list)):
             ret_list[cur_index] = "手掌印"
         if cur_ret == "玉玺" or cur_ret == "瓶塞":
             ret_list[cur_index] = "印章"
@@ -165,14 +167,14 @@ def optimize_baitu_shitu_result(ret_list):
             ret_list[cur_index] = "蜥蜴"
         if "台历" in cur_ret:
             ret_list[cur_index] = "日历"
-        if "鸥" in cur_ret or cur_ret == "白腿小隼":
+        if "鸥" in cur_ret or cur_ret == "白腿小隼" or "鸟" in cur_ret:
             ret_list[cur_index] = "海鸥"
         if "酱" in cur_ret:
             ret_list[cur_index] = "辣椒酱"
         if cur_ret == "洗耳球":
             ret_list[cur_index] = "漏斗"
         if cur_ret == "孔明灯" or cur_ret == "玻璃烛台" or cur_ret == "熔浆" or \
-                cur_ret == "电视背景墙":
+                cur_ret == "电视背景墙" or cur_ret == "洞穴溶洞":
             ret_list[cur_index] = "蜡烛"
         if cur_ret == "葡萄酒":
             ret_list[cur_index] = "红酒"
@@ -180,7 +182,7 @@ def optimize_baitu_shitu_result(ret_list):
             ret_list[cur_index] = "排风机"
         if cur_ret == "记事本" or cur_ret == "笔记本" or cur_ret == "百洁布" or \
            cur_ret == "包装袋/盒" or cur_ret == "文件夹" or cur_ret == "便签纸" or \
-           cur_ret == "辉铜矿" or cur_ret == "麂皮织物":
+           cur_ret == "辉铜矿" or cur_ret == "麂皮织物" or cur_ret == "名片夹":
             ret_list[cur_index] = "本子"
         if cur_ret == "铁粉" or cur_ret == "钛铁矿" or (cur_ret == "板材" and "章鱼丸机" not in ret_list):
             ret_list[cur_index] = "海苔"
@@ -193,7 +195,7 @@ def optimize_baitu_shitu_result(ret_list):
             ret_list[cur_index] = "黑板"
         if cur_ret == "吊袋" or cur_ret == "灭火器" or cur_ret == "电喷泵" or cur_ret == "U盘":
             ret_list[cur_index] = "沙包"
-        if cur_ret == "吊灯" or cur_ret == "前桅":
+        if cur_ret == "吊灯" or cur_ret == "前桅" or cur_ret == "麻花钻":
             ret_list[cur_index] = "风铃"
         if cur_ret == "面包篮" or cur_ret == "规整填料" or cur_ret == "草篓":
             ret_list[cur_index] = "蒸笼"
@@ -204,11 +206,13 @@ def optimize_baitu_shitu_result(ret_list):
         if cur_ret == "锥柄立铣刀":
             ret_list[cur_index] = "冰箱"
         if cur_ret == "棉花球" or cur_ret == "身体乳" or "药" in cur_ret or \
-                cur_ret == "奶油蘑菇汤" or (cur_ret == "糖果" and "电子原器件" in ret_list):
+                cur_ret == "奶油蘑菇汤" or (cur_ret == "糖果" and "电子原器件" in ret_list) or \
+                cur_ret == "燕麦":
             ret_list[cur_index] = "药片"
         if cur_ret == "靴子":
             ret_list[cur_index] = "雨靴"
-        if cur_ret == "线缆" or cur_ret == "钢编管" or cur_ret == "护套线":
+        if cur_ret == "线缆" or cur_ret == "钢编管" or cur_ret == "护套线" \
+                or "保险丝" in cur_ret:
             ret_list[cur_index] = "电线"
         if cur_ret == "阿迪达斯" or cur_ret == "吹风机" or cur_ret == "活塞杆" or \
                 cur_ret == "蓝牙适配器":
@@ -226,14 +230,17 @@ def optimize_baitu_shitu_result(ret_list):
             ret_list[cur_index] = "盘子"
         if cur_ret == "牌楼":
             ret_list[cur_index] = "牌坊"
-        if cur_ret == "九脚网眼" or ("卡" in cur_ret and "卡通" not in cur_ret):
+        if cur_ret == "九脚网眼" or ("卡" in cur_ret and "卡通" not in cur_ret) or \
+                cur_ret == "喷墨盒":
             ret_list[cur_index] = "公交卡"
-        if "蜂" in cur_ret:
+        if "蜂" in cur_ret or cur_ret == "大波斯菊" or cur_ret == "鹿蛾":
             ret_list[cur_index] = "蜜蜂"
         if ("钟" in cur_ret and cur_ret != "钟角蛙") or cur_ret == "表带" or cur_ret == "含生草":
             ret_list[cur_index] = "钟表"
         if "旗" in cur_ret:
             ret_list[cur_index] = "锦旗"
+        if cur_ret == "拖布":
+            ret_list[cur_index] = "拖把"
     print("优化后的识图结果为：%s" % ret_list)
     return ret_list
 
@@ -362,6 +369,9 @@ class LoginBySelenium(object):
 
     def click_login_button(self):
         login_button = self.browser.find_element_by_xpath('//*[@id="J-login"]')
+        WebDriverWait(self.browser, 1000).until(
+            expected_conditions.element_to_be_clickable((By.XPATH, '//*[@id="J-login"]'))
+        )
         login_button.click()
         time.sleep(15)
 
@@ -414,9 +424,6 @@ class LoginBySelenium(object):
         tr_list = self.browser.find_elements_by_xpath('//*[@id="queryLeftTable"]/tr[not(@datatran)]')
         for tr in tr_list:
             has_ticket = False
-            # left_ticket = tr.find_element_by_xpath('.//td[8]').text
-            # if left_ticket == "有" or left_ticket.isdigit():
-            #     has_ticket = True
             left_ticket = tr.find_element_by_xpath('.//td[10]').text
             if left_ticket == "有" or left_ticket.isdigit():
                 has_ticket = True
@@ -425,22 +432,37 @@ class LoginBySelenium(object):
                 book_button = tr.find_element_by_xpath('.//td[13]/a')
                 book_button.click()
                 time.sleep(10)
+                self.set_seat_type()
                 js = "document.getElementById(\"passenger_name_1\").removeAttribute('readonly');"
-                self.browser.execute_script(js)
-                passenger_name_input = self.browser.find_element_by_xpath('//*[@id="passenger_name_1"]')
-                passenger_name_input.clear()
-                passenger_name_input.send_keys(self.cfg_info.get('passenger_name', ''))
-                js = "document.getElementById(\"passenger_id_no_1\").removeAttribute('readonly');"
-                self.browser.execute_script(js)
-                passenger_id_no_input = self.browser.find_element_by_xpath('//*[@id="passenger_id_no_1"]')
-                passenger_id_no_input.clear()
-                passenger_id_no_input.send_keys(self.cfg_info.get('passenger_id_no', ''))
-                js = "document.getElementById(\"phone_no_1\").removeAttribute('readonly');"
-                self.browser.execute_script(js)
-                phone_no_input = self.browser.find_element_by_xpath('//*[@id="phone_no_1"]')
-                phone_no_input.clear()
-                phone_no_input.send_keys(self.cfg_info.get('phone_no', ''))
+                # self.browser.execute_script(js)
+                # passenger_name_input = self.browser.find_element_by_xpath('//*[@id="passenger_name_1"]')
+                # passenger_name_input.clear()
+                # passenger_name_input.send_keys(self.cfg_info.get('passenger_name', ''))
+                # js = "document.getElementById(\"passenger_id_no_1\").removeAttribute('readonly');"
+                # self.browser.execute_script(js)
+                # passenger_id_no_input = self.browser.find_element_by_xpath('//*[@id="passenger_id_no_1"]')
+                # passenger_id_no_input.clear()
+                # passenger_id_no_input.send_keys(self.cfg_info.get('passenger_id_no', ''))
+                # js = "document.getElementById(\"phone_no_1\").removeAttribute('readonly');"
+                # self.browser.execute_script(js)
+                # phone_no_input = self.browser.find_element_by_xpath('//*[@id="phone_no_1"]')
+                # phone_no_input.clear()
+                # phone_no_input.send_keys(self.cfg_info.get('phone_no', ''))
                 print("111111111111")
+
+    def set_seat_type(self):
+        seat_options = self.browser.find_elements_by_xpath('//*[@id="seatType_1"]/option')
+        for cur_option in seat_options:
+            if cur_option.get_attribute("selected"):
+                cur_value = cur_option.get_attribute("value")
+                if cur_value != '1':
+                    js = "arguments[0].removeAttribute('selected');"
+                    self.browser.execute_script(js, cur_option)
+                else:
+                    break
+            if cur_option.get_attribute("value") == '1':
+                js = "arguments[0].setAttribute('selected', 'selected');"
+                self.browser.execute_script(js, cur_option)
 
     def close_browser(self):
         self.browser.close()
