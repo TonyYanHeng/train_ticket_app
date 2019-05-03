@@ -19,6 +19,15 @@ import configparser
 
 cur_file_path = os.path.realpath(__file__)
 cur_dir_path = os.path.dirname(cur_file_path)
+seat_type_dic = {
+    '硬座': '1',
+    '硬卧': '3',
+    '软卧': '4',
+    '二等座': '0',
+    '动卧': 'F',
+    '高级动卧': 'A',
+    '一等座': 'M',
+}
 sub_img_location = {
     '0_0.png': '35,35',
     '0_1.png': '105,35',
@@ -43,8 +52,7 @@ def get_cfg_info_from_ini_file():
         ret["to_station"] = conf.get('cfg', 'to_station')
         ret["train_date"] = conf.get('cfg', 'train_date')
         ret["passenger_name"] = conf.get('cfg', 'passenger_name')
-        ret["passenger_id_no"] = conf.get('cfg', 'passenger_id_no')
-        ret["phone_no"] = conf.get('cfg', 'phone_no')
+        ret["seat_type"] = conf.get('cfg', 'seat_type')
     return ret
 
 
@@ -432,35 +440,38 @@ class LoginBySelenium(object):
                 book_button = tr.find_element_by_xpath('.//td[13]/a')
                 book_button.click()
                 time.sleep(10)
-                self.set_seat_type()
-                js = "document.getElementById(\"passenger_name_1\").removeAttribute('readonly');"
-                # self.browser.execute_script(js)
-                # passenger_name_input = self.browser.find_element_by_xpath('//*[@id="passenger_name_1"]')
-                # passenger_name_input.clear()
-                # passenger_name_input.send_keys(self.cfg_info.get('passenger_name', ''))
-                # js = "document.getElementById(\"passenger_id_no_1\").removeAttribute('readonly');"
-                # self.browser.execute_script(js)
-                # passenger_id_no_input = self.browser.find_element_by_xpath('//*[@id="passenger_id_no_1"]')
-                # passenger_id_no_input.clear()
-                # passenger_id_no_input.send_keys(self.cfg_info.get('passenger_id_no', ''))
-                # js = "document.getElementById(\"phone_no_1\").removeAttribute('readonly');"
-                # self.browser.execute_script(js)
-                # phone_no_input = self.browser.find_element_by_xpath('//*[@id="phone_no_1"]')
-                # phone_no_input.clear()
-                # phone_no_input.send_keys(self.cfg_info.get('phone_no', ''))
+                self.set_seat_type(self.cfg_info.get('seat_type', ''))
+                self.set_passenger(self.cfg_info.get('passenger_name', ''))
+                submit_button = self.browser.find_element_by_xpath('//*[@id="submitOrder_id"]')
+                WebDriverWait(self.browser, 1000).until(
+                    expected_conditions.element_to_be_clickable((By.XPATH, '//*[@id="submitOrder_id"]'))
+                )
+                submit_button.click()
+                time.sleep(5)
                 print("111111111111")
 
-    def set_seat_type(self):
+    def set_passenger(self, passenger_name):
+        passenger_li_list = self.browser.find_elements_by_xpath('//*[@id="normal_passenger_id"]/li')
+        for passenger_li in passenger_li_list:
+            cur_label_text = passenger_li.find_element_by_xpath('.//label').text
+            if cur_label_text == passenger_name:
+                cur_input = passenger_li.find_element_by_xpath('.//input')
+                cur_input.click()
+                time.sleep(1)
+                break
+
+    def set_seat_type(self, seat_type):
+        target_seat_value = seat_type_dic.get(seat_type, '')
         seat_options = self.browser.find_elements_by_xpath('//*[@id="seatType_1"]/option')
         for cur_option in seat_options:
             if cur_option.get_attribute("selected"):
                 cur_value = cur_option.get_attribute("value")
-                if cur_value != '1':
+                if cur_value != target_seat_value:
                     js = "arguments[0].removeAttribute('selected');"
                     self.browser.execute_script(js, cur_option)
                 else:
                     break
-            if cur_option.get_attribute("value") == '1':
+            if cur_option.get_attribute("value") == target_seat_value:
                 js = "arguments[0].setAttribute('selected', 'selected');"
                 self.browser.execute_script(js, cur_option)
 
