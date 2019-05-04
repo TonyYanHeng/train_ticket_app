@@ -44,7 +44,7 @@ def get_cfg_info_from_ini_file():
     ret = {}
     ini_file_path = os.path.join(cur_dir_path, 'conf.ini')
     conf = configparser.ConfigParser()
-    with open(ini_file_path, 'r') as f:
+    with open(ini_file_path, 'r', encoding='utf8') as f:
         conf.read_file(f)
         ret["username"] = conf.get('cfg', 'username')
         ret["password"] = conf.get('cfg', 'password')
@@ -227,7 +227,7 @@ def optimize_baitu_shitu_result(ret_list):
             ret_list[cur_index] = "护腕"
         if cur_ret == "毛绒玩具" or cur_ret == "针线" or cur_ret == "洗衣球" or cur_ret== "文胸":
             ret_list[cur_index] = "毛线"
-        if  "勺" in ret_list:
+        if "勺" in ret_list:
             ret_list[cur_index] = "锅铲"
         if cur_ret == "拍子" or cur_ret == "杯刷":
             ret_list[cur_index] = "苍蝇拍"
@@ -290,29 +290,17 @@ class LoginBySelenium(object):
 
     def prepare_for_download_img64(self):
         self.browser.get(self.index_url)
-        time.sleep(2)
-        # 等待index页面加载完成后再点击“登录”
+        time.sleep(1)
         login_a_xpath = '/html/body/div[2]/div/div[1]/div/div/ul/li[3]/a[1]'
-        # WebDriverWait(self.browser, 100).until(
-        #     expected_conditions.text_to_be_present_in_element((By.XPATH, login_a_xpath), '登录')
-        # )
         login_a = self.browser.find_element_by_xpath(login_a_xpath)
         login_a.click()
-        time.sleep(2)
-        # 等待默认的login页面加载完成后再点击“账号登录”
-        # WebDriverWait(self.browser, 100).until(
-        #     expected_conditions.visibility_of_element_located((By.XPATH, '//*[@id="J-login-code-loading"]'))
-        # )
+        time.sleep(1)
         account_login_a_xpath = '/html/body/div[2]/div[2]/ul/li[2]/a'
         account_login_a = self.browser.find_element_by_xpath(account_login_a_xpath)
         account_login_a.click()
-        time.sleep(3)
-        shaoma_login_css_selector = '.login-code'
-        WebDriverWait(self.browser, 100).until(
-            expected_conditions.invisibility_of_element_located((By.CSS_SELECTOR, shaoma_login_css_selector))
-        )
+        time.sleep(1)
         self.input_username_and_password()
-        # time.sleep(5)
+        time.sleep(2)
 
     def input_username_and_password(self):
         username_input = self.browser.find_element_by_xpath('//*[@id="J-userName"]')
@@ -381,7 +369,7 @@ class LoginBySelenium(object):
             expected_conditions.element_to_be_clickable((By.XPATH, '//*[@id="J-login"]'))
         )
         login_button.click()
-        time.sleep(15)
+        time.sleep(10)
 
     def get_current_url(self):
         return self.browser.current_url
@@ -391,7 +379,7 @@ class LoginBySelenium(object):
         self.browser.execute_script(js)
         refresh_button = self.browser.find_element_by_css_selector('.lgcode-refresh')
         refresh_button.click()
-        time.sleep(5)
+        time.sleep(3)
 
     def query_ticket(self):
         # 打开查票网页
@@ -439,7 +427,7 @@ class LoginBySelenium(object):
                 print("有满足条件的[硬座]车票！")
                 book_button = tr.find_element_by_xpath('.//td[13]/a')
                 book_button.click()
-                time.sleep(10)
+                time.sleep(5)
                 self.set_seat_type(self.cfg_info.get('seat_type', ''))
                 self.set_passenger(self.cfg_info.get('passenger_name', ''))
                 submit_button = self.browser.find_element_by_xpath('//*[@id="submitOrder_id"]')
@@ -448,7 +436,14 @@ class LoginBySelenium(object):
                 )
                 submit_button.click()
                 time.sleep(5)
-                print("111111111111")
+                self.browser.current_window_handle
+                qr_submit_button = self.browser.find_element_by_xpath('//*[@id="qr_submit_id"]')
+                WebDriverWait(self.browser, 1000).until(
+                    expected_conditions.element_to_be_clickable((By.XPATH, '//*[@id="qr_submit_id"]'))
+                )
+                qr_submit_button.click()
+                time.sleep(60)
+                print('订票成功！')
 
     def set_passenger(self, passenger_name):
         passenger_li_list = self.browser.find_elements_by_xpath('//*[@id="normal_passenger_id"]/li')
@@ -500,3 +495,4 @@ if __name__ == '__main__':
         print("Exception happened, the detail is: %s!" % e)
     finally:
         login_ins.close_browser()
+        print("121212")
